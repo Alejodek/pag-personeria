@@ -1,5 +1,4 @@
 document.getElementById("formulario").addEventListener("submit", async function(e) {e.preventDefault();
-
     const nombre = document.getElementById("nombre").value.trim();
     const email = document.getElementById("email").value.trim();
     const cargo = document.getElementById("cargo").value;
