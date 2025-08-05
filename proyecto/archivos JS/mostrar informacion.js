@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const cargo = esPersonero ? "Personero" : "Contralor";
 
 try {
-    const res = await fetch("http://localhost:3000/candidatos");
+    const res = await fetch("https://tu-proyecto.onrender.com/candidatos");
     const candidatos = await res.json();
 
     const contenedor = document.querySelector(".block-level");

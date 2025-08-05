@@ -35,7 +35,7 @@ const postulacion = {
 };
 
 try {
-    const res = await fetch("http://localhost:3000/postular", {
+    const res = await fetch("https://tu-proyecto.onrender.com/candidatos",{
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(postulacion)
