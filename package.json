@@ -1,7 +1,6 @@
 {
   "name": "sistema-votaciones",
   "version": "1.0.0",
-  "description": "Sistema de votaciones con Node.js y SQLite",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
