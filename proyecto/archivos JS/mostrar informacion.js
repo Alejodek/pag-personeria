@@ -3,7 +3,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const cargo = esPersonero ? "Personero" : "Contralor";
 
 try {
-    const res = await fetch("https://pag-personeria-1.onrender.com");
+    const res = await fetch("https://pag-personeria-1.onrender.com")
+        .then(res => res.json())
+        .then(candidatos => {
+        console.log(candidatos);
+    })
+.catch(err => console.error("Error al cargar candidatos:", err));
     const candidatos = await res.json();
 
     const contenedor = document.querySelector(".block-level");
