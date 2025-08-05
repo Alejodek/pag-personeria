@@ -41,9 +41,11 @@ if (err) {
 });
 
 
-app.get('/candidatos', (req, res) => {
-  db.all('SELECT * FROM candidatos', [], (err, rows) => {
-    if (err) return res.status(500).json({ mensaje: 'Error al obtener candidatos' });
+app.get("/candidatos", (req, res) => {
+  db.all("SELECT * FROM candidatos", [], (err, rows) => {
+    if (err) {
+        return res.status(500).json({ error: err.message });
+    }
     res.json(rows);
 });
 });
