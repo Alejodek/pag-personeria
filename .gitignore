@@ -1,0 +1,3 @@
+node_modules
+base_datos.db
+*.log
