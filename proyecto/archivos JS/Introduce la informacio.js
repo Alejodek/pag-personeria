@@ -35,7 +35,7 @@ const postulacion = {
 };
 
 try {
-    const res = await fetch("https://tu-proyecto.onrender.com/candidatos",{
+    const res = await fetch("https://pag-personeria-1.onrender.com",{
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(postulacion)
