@@ -9,7 +9,8 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-
+app.use(require("cors")());
+app.use(express.static(__dirname + "/proyecto"));
 app.use(express.static(path.join(__dirname, 'proyecto')));
 
 const db = new sqlite3.Database(path.join(__dirname, 'base_datos.db'), err => {
@@ -58,6 +59,11 @@ stmt.run([nombre, email, foto, cargo, propuestas], function(err) {
     });
 });
 
+app.listen(3000, () => {
+    console.log("✅ Conectado a SQLite (base_datos.db)");
+    console.log("🚀 Servidor escuchando en http://localhost:3000");
+});
+
 app.post('/votar', (req, res) => {
 const { candidato } = req.body;
 db.run(
@@ -73,3 +79,4 @@ db.run(
 app.listen(PORT, () => {
     console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
 });
+
