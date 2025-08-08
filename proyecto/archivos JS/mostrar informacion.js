@@ -1,50 +1,53 @@
-const BASE = window.location.origin.includes('localhost')
-    ? 'http://localhost:3000'
-    : 'https://pag-personeria-1.onrender.com';
+document.addEventListener("DOMContentLoaded", async () => {
+    const contenedor = document.getElementById("contenedor-candidatos");
 
-async function cargarCandidatos() {
     try {
-        const res = await fetch(`${BASE}/candidatos`);
+        const res = await fetch("/candidatos");
+        if (!res.ok) throw new Error("Error en la respuesta del servidor");
+
         const candidatos = await res.json();
 
-        const contenedor = document.getElementById("candidatos");
-        contenedor.innerHTML = "";
-
-        if (!candidatos.length) {
+        if (candidatos.length === 0) {
             contenedor.innerHTML = "<p>No hay candidatos registrados.</p>";
             return;
         }
 
-        candidatos.forEach(p => {
+        // Mostrar cada candidato
+        candidatos.forEach(c => {
             const div = document.createElement("div");
+            div.classList.add("candidato");
+
             div.innerHTML = `
-                <img src="${p.foto || 'sin-foto.jpg'}" width="100">
-                <h3>${p.nombre}</h3>
-                <p>${p.propuestas}</p>
-                <button class="n" onclick="votar(${p.id})">Votar</button>
+                <img src="${c.foto || 'default.jpg'}" alt="Foto de ${c.nombre}" width="150">
+                <h3>${c.nombre}</h3>
+                <p><strong>Cargo:</strong> ${c.cargo}</p>
+                <p><strong>Propuestas:</strong> ${c.propuestas}</p>
+                <p><strong>Votos:</strong> ${c.votos}</p>
+                <button data-id="${c.id}" class="btn-votar">Votar</button>
             `;
+
             contenedor.appendChild(div);
         });
-    } catch (err) {
-        console.error("Error al cargar candidatos:", err);
-        alert("No se pudieron cargar los candidatos.");
-    }
-}
 
-async function votar(id) {
-    try {
-        const res = await fetch(`${BASE}/votar`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id })
+        // Asignar evento de voto
+        document.querySelectorAll(".btn-votar").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                const id = e.target.getAttribute("data-id");
+
+                const resVoto = await fetch(`/votar/${id}`, {
+                    method: "POST"
+                });
+
+                const data = await resVoto.json();
+                alert(data.mensaje);
+
+                // Recargar para mostrar votos actualizados
+                location.reload();
+            });
         });
 
-        const data = await res.json();
-        alert(data.mensaje);
-        cargarCandidatos();
-    } catch (err) {
-        console.error("Error al votar:", err);
+    } catch (error) {
+        console.error("❌ Error al cargar los candidatos:", error);
+        contenedor.innerHTML = "<p>No se pudieron cargar los candidatos.</p>";
     }
-}
-
-cargarCandidatos();
+});
