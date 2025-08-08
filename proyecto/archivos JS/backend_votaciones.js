@@ -76,5 +76,5 @@ app.get('/votos', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Servidor backend corriendo en http://localhost:${PORT}`);
+    console.log(`Servidor backend corriendo en https://pag-personeria-1.onrender.com:${PORT}`);
 });

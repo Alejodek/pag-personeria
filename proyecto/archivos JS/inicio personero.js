@@ -8,7 +8,7 @@ async function iniciarSesion() {
         return;
     }
 
-    const res = await fetch('http://localhost:3000/login', {
+    const res = await fetch('https://pag-personeria-1.onrender.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ correo, codigo, clave })

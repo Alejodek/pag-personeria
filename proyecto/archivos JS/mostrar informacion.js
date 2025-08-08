@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", async () => {
     try {
-        const res = await fetch("http://localhost:3000/candidatos");
+        const res = await fetch("https://pag-personeria-1.onrender.com");
         if (!res.ok) throw new Error("No se pudieron cargar los candidatos");
 
         const candidatos = await res.json();
@@ -29,7 +29,7 @@ async function votar(id) {
         return alert("Debes ingresar tu nombre de usuario");
     }
 
-    const res = await fetch(`http://localhost:3000/votar/${id}`, {
+    const res = await fetch(`https://pag-personeria-1.onrender.com/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ usuario })

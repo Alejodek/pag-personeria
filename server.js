@@ -6,6 +6,16 @@ const bodyParser = require("body-parser");
 const app = express();
 const PORT = 3000;
 
+const path = require("path");
+
+// Servir archivos estáticos (HTML, CSS, JS)
+app.use(express.static(path.join(__dirname)));
+
+// Ruta principal -> index.html
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "index.html"));
+});
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -109,5 +119,5 @@ app.post("/votar-blanco", (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`🚀 Servidor corriendo en https://pag-personeria-1.onrender.com${PORT}`);
 });

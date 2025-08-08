@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    const res = await fetch("http://localhost:3000/candidatos");
+    const res = await fetch("https://pag-personeria-1.onrender.com");
     const candidatos = await res.json();
 
     const container = document.getElementById("estadisticas");
