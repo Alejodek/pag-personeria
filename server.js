@@ -32,7 +32,7 @@ app.get("/candidatos", (req, res) => {
     });
 });
 
-app.post("/votar/:id", (req, res) => {
+app.post("/votos/:id", (req, res) => {
     const id = req.params.id;
     db.run("UPDATE candidatos SET votos = votos + 1 WHERE id = ?", [id], function (err) {
         if (err) {
