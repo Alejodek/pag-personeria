@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "index.html"));
+    res.sendFile(path.join(__dirname, "proyecto", "index.html"));
 });
 
 const db = new sqlite3.Database(path.join(__dirname, "base_datos.db"), (err) => {
