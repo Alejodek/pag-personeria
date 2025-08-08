@@ -15,6 +15,8 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "proyecto", "index.html"));
 });
 
+app.use(express.static(path.join(__dirname, "proyecto")));
+
 const db = new sqlite3.Database(path.join(__dirname, "base_datos.db"), (err) => {
     if (err) {
         console.error("❌ Error al conectar con SQLite:", err.message);
