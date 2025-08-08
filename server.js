@@ -1,81 +1,80 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const express = require("express");
+const sqlite3 = require("sqlite3").verbose();
+const path = require("path");
+const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(bodyParser.json());
-app.use(require("cors")());
-app.use(express.static(__dirname + "/proyecto"));
-app.use(express.static(path.join(__dirname, 'proyecto')));
+app.use(express.json({ limit: "10mb" }));
 
-const db = new sqlite3.Database(path.join(__dirname, 'base_datos.db'), err => {
-if (err) {
-    console.error('❌ Error al conectar a SQLite:', err.message);
-} else {
-    console.log('✅ Conexión exitosa a SQLite');
-    db.run(`
-    CREATE TABLE IF NOT EXISTS candidatos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT,
-        email TEXT UNIQUE,
-        foto TEXT,
-        cargo TEXT,
-        propuestas TEXT,
-        total_votos INTEGER DEFAULT 0
-    )
-    `);
-    db.run(`
-    CREATE TABLE IF NOT EXISTS votos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE,
-        candidato_id INTEGER,
-        FOREIGN KEY(candidato_id) REFERENCES candidatos(id)
-    )
-    `);
-}
+app.use(express.static(path.join(__dirname, "proyecto")));
+
+const db = new sqlite3.Database(path.join(__dirname, "base_datos.db"), (err) => {
+    if (err) {
+        console.error("❌ Error al conectar con SQLite:", err.message);
+    } else {
+        console.log("✅ Conexión exitosa a SQLite (base_datos.db)");
+
+        // Verificar tablas
+        db.all(`SELECT name FROM sqlite_master WHERE type='table'`, [], (err, rows) => {
+            if (err) console.error("❌ Error al leer tablas:", err.message);
+            else console.log("📋 Tablas encontradas:", rows);
+        });
+    }
 });
-
 
 app.get("/candidatos", (req, res) => {
-  db.all("SELECT * FROM candidatos", [], (err, rows) => {
-    if (err) {
-        return res.status(500).json({ error: err.message });
-    }
-    res.json(rows);
-});
-});
-
-app.post('/postular', (req, res) => {
-    const { nombre, email, foto, cargo, propuestas } = req.body;
-    const stmt = db.prepare(
-    'INSERT INTO candidatos (nombre, email, foto, cargo, propuestas) VALUES (?, ?, ?, ?, ?)'
-);
-stmt.run([nombre, email, foto, cargo, propuestas], function(err) {
-    if (err) return res.status(400).json({ mensaje: '⚠️ Ya existe una postulación con ese correo' });
-    res.json({ mensaje: '✅ Postulación guardada correctamente' });
+    db.all("SELECT * FROM candidatos", [], (err, rows) => {
+        if (err) {
+            console.error("❌ Error al obtener candidatos:", err.message);
+            res.status(500).json({ error: "Error al obtener candidatos" });
+        } else {
+            res.json(rows);
+        }
     });
 });
 
-app.listen(3000, () => {
-    console.log("✅ Conectado a SQLite (base_datos.db)");
-    console.log("🚀 Servidor escuchando en http://localhost:3000");
+app.post("/postular", (req, res) => {
+    const { nombre, email, foto, cargo, propuestas } = req.body;
+
+    if (!nombre || !email || !cargo || !propuestas) {
+        return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
+    }
+    db.get(`SELECT * FROM candidatos WHERE email = ?`, [email], (err, row) => {
+        if (err) {
+            console.error("❌ Error en consulta:", err.message);
+            return res.status(500).json({ mensaje: "Error en el servidor" });
+        }
+        if (row) {
+            return res.status(400).json({ mensaje: "Ya existe un candidato con este correo" });
+        }
+
+        db.run(
+            `INSERT INTO candidatos (nombre, email, foto, cargo, propuestas, votos) VALUES (?, ?, ?, ?, ?, 0)`,
+            [nombre, email, foto, cargo, propuestas],
+            function (err) {
+                if (err) {
+                    console.error("❌ Error al insertar:", err.message);
+                    return res.status(500).json({ mensaje: "Error al guardar candidato" });
+                }
+                res.json({ mensaje: "✅ Candidato registrado con éxito" });
+            }
+        );
+    });
 });
 
-app.post('/votar', (req, res) => {
-const { candidato } = req.body;
-db.run(
-    'UPDATE candidatos SET total_votos = total_votos + 1 WHERE nombre = ?',
-    [candidato],
-    function(err) {
-    if (err || this.changes === 0) return res.status(400).json({ mensaje: '❌ Error al votar' });
-    res.json({ mensaje: `✅ Voto registrado para ${candidato}` });
-    }
-);
+app.post("/votar/:id", (req, res) => {
+    const id = req.params.id;
+    db.run(`UPDATE candidatos SET votos = votos + 1 WHERE id = ?`, [id], function (err) {
+        if (err) {
+            console.error("❌ Error al votar:", err.message);
+            res.status(500).json({ mensaje: "Error al votar" });
+        } else {
+            res.json({ mensaje: "✅ Voto registrado" });
+        }
+    });
 });
 
 app.listen(PORT, () => {
