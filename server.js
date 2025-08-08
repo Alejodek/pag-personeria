@@ -1,82 +1,113 @@
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
-const path = require("path");
 const cors = require("cors");
+const bodyParser = require("body-parser");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3000;
 
+// Middleware
 app.use(cors());
-app.use(express.json({ limit: "10mb" }));
+app.use(bodyParser.json());
+app.use(express.static(__dirname)); // para servir los HTML y JS
 
-app.use(express.static(path.join(__dirname, "proyecto")));
-
-const db = new sqlite3.Database(path.join(__dirname, "base_datos.db"), (err) => {
+// Conexión SQLite
+const db = new sqlite3.Database("base_datos.db", (err) => {
     if (err) {
-        console.error("❌ Error al conectar con SQLite:", err.message);
+        console.error("❌ Error conectando a SQLite:", err.message);
     } else {
-        console.log("✅ Conexión exitosa a SQLite (base_datos.db)");
-
-        // Verificar tablas
-        db.all(`SELECT name FROM sqlite_master WHERE type='table'`, [], (err, rows) => {
-            if (err) console.error("❌ Error al leer tablas:", err.message);
-            else console.log("📋 Tablas encontradas:", rows);
-        });
+        console.log("✅ Conectado a SQLite (base_datos.db)");
     }
 });
 
+// Crear tablas si no existen
+db.run(`CREATE TABLE IF NOT EXISTS candidatos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT UNIQUE,
+    cargo TEXT,
+    votos INTEGER DEFAULT 0
+)`);
+
+db.run(`CREATE TABLE IF NOT EXISTS votos_blanco (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cargo TEXT,
+    votos INTEGER DEFAULT 0
+)`);
+
+db.run(`CREATE TABLE IF NOT EXISTS historial_votos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario TEXT UNIQUE
+)`);
+
+// 📌 Ruta para obtener candidatos
 app.get("/candidatos", (req, res) => {
     db.all("SELECT * FROM candidatos", [], (err, rows) => {
         if (err) {
-            console.error("❌ Error al obtener candidatos:", err.message);
-            res.status(500).json({ error: "Error al obtener candidatos" });
-        } else {
-            res.json(rows);
+            return res.status(500).json({ mensaje: "Error al obtener candidatos" });
         }
+        res.json(rows);
     });
 });
 
-app.post("/postular", (req, res) => {
-    const { nombre, email, foto, cargo, propuestas } = req.body;
+// 📌 Ruta para votar por un candidato
+app.post("/votar/:id", (req, res) => {
+    const { id } = req.params;
+    const { usuario } = req.body;
 
-    if (!nombre || !email || !cargo || !propuestas) {
-        return res.status(400).json({ mensaje: "Todos los campos son obligatorios" });
+    if (!usuario) {
+        return res.status(400).json({ mensaje: "Usuario requerido para votar" });
     }
-    db.get(`SELECT * FROM candidatos WHERE email = ?`, [email], (err, row) => {
-        if (err) {
-            console.error("❌ Error en consulta:", err.message);
-            return res.status(500).json({ mensaje: "Error en el servidor" });
-        }
+
+    // Verificar si ya votó
+    db.get("SELECT * FROM historial_votos WHERE usuario = ?", [usuario], (err, row) => {
         if (row) {
-            return res.status(400).json({ mensaje: "Ya existe un candidato con este correo" });
+            return res.status(400).json({ mensaje: "Ya has votado" });
         }
 
+        // Sumar voto
+        db.run("UPDATE candidatos SET votos = votos + 1 WHERE id = ?", [id], function (err) {
+            if (err) {
+                return res.status(500).json({ mensaje: "Error al registrar voto" });
+            }
+
+            // Guardar historial
+            db.run("INSERT INTO historial_votos (usuario) VALUES (?)", [usuario]);
+            res.json({ mensaje: "Voto registrado correctamente" });
+        });
+    });
+});
+
+// 📌 Ruta para votar en blanco
+app.post("/votar-blanco", (req, res) => {
+    const { usuario, cargo } = req.body;
+
+    if (!usuario || !cargo) {
+        return res.status(400).json({ mensaje: "Usuario y cargo son requeridos" });
+    }
+
+    // Verificar si ya votó
+    db.get("SELECT * FROM historial_votos WHERE usuario = ?", [usuario], (err, row) => {
+        if (row) {
+            return res.status(400).json({ mensaje: "Ya has votado en esta elección" });
+        }
+
+        // Sumar voto en blanco
         db.run(
-            `INSERT INTO candidatos (nombre, email, foto, cargo, propuestas, votos) VALUES (?, ?, ?, ?, ?, 0)`,
-            [nombre, email, foto, cargo, propuestas],
+            "INSERT INTO votos_blanco (cargo, votos) VALUES (?, 1) ON CONFLICT(cargo) DO UPDATE SET votos = votos + 1",
+            [cargo],
             function (err) {
                 if (err) {
-                    console.error("❌ Error al insertar:", err.message);
-                    return res.status(500).json({ mensaje: "Error al guardar candidato" });
+                    return res.status(500).json({ mensaje: "Error al registrar voto en blanco" });
                 }
-                res.json({ mensaje: "✅ Candidato registrado con éxito" });
+
+                // Guardar historial
+                db.run("INSERT INTO historial_votos (usuario) VALUES (?)", [usuario]);
+                res.json({ mensaje: "Voto en blanco registrado" });
             }
         );
     });
 });
 
-app.post("/votar/:id", (req, res) => {
-    const id = req.params.id;
-    db.run(`UPDATE candidatos SET votos = votos + 1 WHERE id = ?`, [id], function (err) {
-        if (err) {
-            console.error("❌ Error al votar:", err.message);
-            res.status(500).json({ mensaje: "Error al votar" });
-        } else {
-            res.json({ mensaje: "✅ Voto registrado" });
-        }
-    });
-});
-
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
+    console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });
