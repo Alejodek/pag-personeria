@@ -29,7 +29,7 @@ async function votar(id) {
         return alert("Debes ingresar tu nombre de usuario");
     }
 
-    const res = await fetch(`https://pag-personeria-1.onrender.com/${id}`, {
+const res = await fetch("https://pag-personeria-1.onrender.com/candidatos",{
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ usuario })

@@ -44,6 +44,16 @@ app.post("/votos/:id", (req, res) => {
     });
 });
 
+app.post("/postular", (req, res) => {
+    const { nombre, email, foto, cargo, propuestas } = req.body;
+    const sql = `INSERT INTO candidatos (nombre, email, foto, cargo, propuestas, votos) VALUES (?, ?, ?, ?, ?, 0)`;
+    db.run(sql, [nombre, email, foto, cargo, propuestas], function(err) {
+        if (err) return res.status(500).json({ mensaje: "Error al guardar candidato" });
+        res.json({ mensaje: "Postulación registrada" });
+    });
+});
+
+
 app.listen(PORT, () => {
     console.log(`🚀 Servidor ejecutándose en http://localhost:${PORT}`);
 });
