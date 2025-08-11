@@ -65,7 +65,7 @@ app.post("/postular", (req, res) => {
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "proyecto", "index.html"));
 });
-app.get(path.join(__dirname, "proyecto"));
+app.use(express.static(path.join(__dirname, "proyecto")));
 
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
