@@ -1,40 +1,34 @@
-document.addEventListener("DOMContentLoaded", async () => {
+async function cargarCandidatos() {
     try {
-        const res = await fetch("https://pag-personeria-1.onrender.com");
-        if (!res.ok) throw new Error("No se pudieron cargar los candidatos");
+        const res = await fetch("/candidatos");
+        if (!res.ok) throw new Error("Error al obtener candidatos");
 
         const candidatos = await res.json();
-        const contenedor = document.getElementById("listaCandidatos");
+        const contenedor = document.getElementById("lista-candidatos");
+        contenedor.innerHTML = "";
+
+        if (candidatos.length === 0) {
+            contenedor.innerHTML = "<p>No hay candidatos registrados.</p>";
+            return;
+        }
 
         candidatos.forEach(c => {
             const div = document.createElement("div");
             div.classList.add("candidato");
             div.innerHTML = `
-                <h3>${c.nombre} (${c.cargo})</h3>
-                <p>Votos: ${c.votos}</p>
-                <input type="text" id="usuario_${c.id}" placeholder="Tu nombre de usuario">
-                <button onclick="votar(${c.id})">Votar</button>
+                <img src="${c.foto || 'img/default.jpg'}" alt="${c.nombre}" width="100">
+                <h3>${c.nombre}</h3>
+                <p><b>Cargo:</b> ${c.cargo}</p>
+                <p><b>Propuestas:</b> ${c.propuestas}</p>
+                <p><b>Votos:</b> ${c.votos}</p>
             `;
             contenedor.appendChild(div);
         });
     } catch (error) {
         console.error(error);
-        alert("No se pudieron cargar los candidatos");
+        document.getElementById("lista-candidatos").innerHTML =
+            "<p>Error al cargar candidatos.</p>";
     }
-});
-
-async function votar(id) {
-    const usuario = document.getElementById(`usuario_${id}`).value.trim();
-    if (!usuario) {
-        return alert("Debes ingresar tu nombre de usuario");
-    }
-
-const res = await fetch("https://pag-personeria-1.onrender.com/candidatos",{
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usuario })
-    });
-
-    const data = await res.json();
-    alert(data.mensaje);
 }
+
+document.addEventListener("DOMContentLoaded", cargarCandidatos);

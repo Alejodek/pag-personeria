@@ -1,42 +1,56 @@
-document.getElementById("formulario").addEventListener("submit", async function(e) {e.preventDefault();
+document.getElementById("formulario").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
     const nombre = document.getElementById("nombre").value.trim();
     const email = document.getElementById("email").value.trim();
-    const cargo = document.getElementById("cargo").value;
+    const cargo = document.getElementById("cargo").value.trim();
     const propuestas = document.getElementById("propuestas").value.trim();
-    const fotoInput = document.getElementById("foto");
-    const file = fotoInput ? fotoInput.files[0] : null;
+    const fileInput = document.getElementById("foto");
+    const file = fileInput.files[0];
 
-if (!nombre || !email) {
-    alert('Completa nombre y email.');
-    return;
-}
+    if (!nombre || !email || !cargo || !propuestas) {
+        alert("Por favor, completa todos los campos.");
+        return;
+    }
 
-const getBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-});
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert("Por favor, introduce un correo electrónico válido.");
+        return;
+    }
 
-const fotoBase64 = file ? await getBase64(file) : '';
-
-const postulacion = { nombre, email, foto: fotoBase64, cargo, propuestas };
-
-const BASE = 'https://pag-personeria-1.onrender.com';
-
-try {
-    const res = await fetch(`${BASE}/postular`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(postulacion)
+    const getBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.mensaje || 'Error');
-    alert(data.mensaje);
-    // redirigir a inicio
-    window.location.href = 'index.html';
-} catch (err) {
-    console.error('Error al postular:', err);
-    alert('No se pudo postular. Revisa la consola.');
-}
+
+    const fotoBase64 = file ? await getBase64(file) : "";
+
+    const postulacion = {
+        nombre,
+        email,
+        foto: fotoBase64,
+        cargo,
+        propuestas
+    };
+
+    try {
+        const res = await fetch("/postular", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(postulacion)
+        });
+
+        const data = await res.json();
+        alert(data.mensaje);
+
+        if (res.ok) {
+            window.location.href = "index.html";
+        }
+    } catch (error) {
+        console.error("Error al enviar datos:", error);
+        alert("Error de conexión con el servidor");
+    }
 });
