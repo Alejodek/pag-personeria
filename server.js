@@ -27,16 +27,15 @@ const db = new sqlite3.Database(path.join(__dirname, "base_datos.db"), (err) => 
 
 app.get("/candidatos", (req, res) => {
     db.all("SELECT * FROM candidatos", [], (err, rows) => {
-        if (err) {
-            return res.status(500).json({ error: "Error al obtener candidatos" });
-        }
+        if (err) return res.status(500).json({ mensaje: "Error al obtener candidatos" });
         res.json(rows);
     });
 });
 
+
 app.post("/votos/:id", (req, res) => {
     const id = req.params.id;
-    db.run("UPDATE candidatos SET votos = votos + 1 WHERE id = ?", [id], function (err) {
+    db.run("UPDATE candidatos SET total_votos = votos + 1 WHERE id = ?", [id], function (err) {
         if (err) {
             return res.status(500).json({ error: "Error al registrar voto" });
         }
