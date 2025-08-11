@@ -26,6 +26,8 @@ document.getElementById("formulario").addEventListener("submit", async function 
         reader.onerror = error => reject(error);
     });
 
+    const db = new sqlite3.Database(path.join(__dirname, "base_datos.db"))
+
     const fotoBase64 = file ? await getBase64(file) : "";
 
     const postulacion = {
