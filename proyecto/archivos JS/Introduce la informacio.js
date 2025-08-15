@@ -3,7 +3,7 @@ document.getElementById("formulario").addEventListener("submit", async function 
 
     const nombre = document.getElementById("nombre").value.trim();
     const email = document.getElementById("email").value.trim();
-    const cargo = document.getElementById("cargo").value.trim();
+    const cargo = document.getElementById("cargo").value.trim().toLowerCase();
     const propuestas = document.getElementById("propuestas").value.trim();
     const fileInput = document.getElementById("foto");
     const file = fileInput.files[0];
